@@ -13,7 +13,12 @@ import lombok.*;
 public class Account {
 
     @Id
-    @Column(name = "email_address")
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq")
+    private long id;
+
+    @Column(name = "email_address", unique = true, nullable = false)
     private String emailAddress;
 
     @Column(name = "password", nullable = false)
@@ -23,6 +28,6 @@ public class Account {
     private boolean isActive;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "profile_id")
+    @JoinColumn(name = "profile_id", unique = true)
     private Profile profile;
 }
