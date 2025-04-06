@@ -18,6 +18,6 @@ public class City {
     @SequenceGenerator(name = "city_seq", sequenceName = "city_seq")
     private int id;
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 }
