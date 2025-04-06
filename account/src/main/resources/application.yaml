@@ -7,6 +7,6 @@ spring:
     password: 12345678
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
