@@ -1,6 +1,6 @@
 package com.aklbeti.account.dto;
 
-public record RegistrationResponse(
+public record Response(
 
         boolean success,
 
