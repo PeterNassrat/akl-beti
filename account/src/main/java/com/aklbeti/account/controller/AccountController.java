@@ -32,8 +32,8 @@ public class AccountController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<RegistrationResponse> create(
+    @PostMapping("/register")
+    public ResponseEntity<Response> register(
             @Valid @RequestBody RegistrationRequest request) {
 
         // city validation
