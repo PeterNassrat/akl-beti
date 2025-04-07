@@ -42,7 +42,7 @@ public class AccountController {
 
         for(int i = 0; i < cities.size(); i++) {
             if (!cityService.isCityExist(cities.get(i))) {
-                throw new AccountCreationException(
+                throw new RegistrationException(
                         String.format("The city \"%s\" in the %dth address is not valid!", cities.get(i), i + 1));
             }
         }
