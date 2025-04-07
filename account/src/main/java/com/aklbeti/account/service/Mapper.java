@@ -1,9 +1,6 @@
 package com.aklbeti.account.service;
 
-import com.aklbeti.account.dto.AddressRequest;
-import com.aklbeti.account.dto.CityRequest;
-import com.aklbeti.account.dto.ProfileRequest;
-import com.aklbeti.account.dto.RegistrationRequest;
+import com.aklbeti.account.dto.*;
 import com.aklbeti.account.entity.Account;
 import com.aklbeti.account.entity.Address;
 import com.aklbeti.account.entity.City;
@@ -21,7 +18,7 @@ public class Mapper {
                 .build();
     }
 
-    public Profile toProfile(ProfileRequest request) {
+    private Profile toProfile(ProfileRequest request) {
         return Profile.builder()
                 .firstName(request.firstName())
                 .lastName(request.lastName())
@@ -29,7 +26,7 @@ public class Mapper {
                 .build();
     }
 
-    public Address toAddress(AddressRequest request) {
+    private Address toAddress(AddressRequest request) {
         return Address.builder()
                 .street(request.street())
                 .buildNo(request.buildNo())
@@ -37,11 +34,39 @@ public class Mapper {
                 .build();
     }
 
-    public City toCity(CityRequest request) {
+    private City toCity(CityRequest request) {
         return City.builder()
                 .name(request.name())
                 .build();
     }
 
+    public AccountResponse toAccountResponse(Account account) {
+        return new AccountResponse(
+                account.getId(),
+                account.getEmailAddress(),
+                toProfileResponse(account.getProfile())
+        );
+    }
 
+    private ProfileResponse toProfileResponse(Profile profile) {
+        return new ProfileResponse(
+                profile.getFirstName(),
+                profile.getLastName(),
+                profile.getAddresses().stream().map(this::toAddressResponse).toList()
+        );
+    }
+
+    private AddressResponse toAddressResponse(Address address) {
+        return new AddressResponse(
+                address.getStreet(),
+                address.getBuildNo(),
+                toCityResponse(address.getCity())
+        );
+    }
+
+    private CityResponse toCityResponse(City city) {
+        return new CityResponse(
+                city.getName()
+        );
+    }
 }
