@@ -3,16 +3,17 @@ package com.aklbeti.account.controller;
 import com.aklbeti.account.dto.*;
 import com.aklbeti.account.entity.Account;
 import com.aklbeti.account.entity.Address;
-import com.aklbeti.account.exception.AccountCreationException;
+import com.aklbeti.account.exception.CloseException;
+import com.aklbeti.account.exception.RegistrationException;
+import com.aklbeti.account.exception.LoginException;
+import com.aklbeti.account.exception.UpdateException;
 import com.aklbeti.account.service.Mapper;
 import com.aklbeti.account.service.AccountService;
 import com.aklbeti.account.service.CityService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -47,10 +48,10 @@ public class AccountController {
             }
         }
 
-        // create new account
+        // map request to account entity
         Account newAccount = mapper.toAccount(request);
 
-        // put the city for addresses
+        // put the city for addresses from database
         for(Address address : newAccount.getProfile().getAddresses()) {
             address.setCity(cityService.findByName(address.getCity().getName()));
         }
