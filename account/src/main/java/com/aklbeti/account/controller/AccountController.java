@@ -56,6 +56,42 @@ public class AccountController {
         }
 
         accountService.create(newAccount);
-        return ResponseEntity.ok(new RegistrationResponse(true, "Account created successfully."));
+        return ResponseEntity.ok(new Response(true, "Registered successfully."));
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        if(accountService.isAccountExist(request.emailAddress())) {
+            Account account = accountService.findByEmailAddressWithAddressesAndCities(request.emailAddress());
+            if(request.password().equals(account.getPassword())) {
+                return ResponseEntity.ok(new LoginResponse(
+                        new Response(true, "Logged in successfully."),
+                        mapper.toAccountResponse(account)
+                ));
+            }
+        }
+        throw new LoginException("Invalid email or password!");
+    }
+
+    @DeleteMapping("/close/{id}")
+    public ResponseEntity<Response> close(@Valid @RequestBody CloseRequest request, @Positive @PathVariable long id) {
+        Account account = accountService.findById(id);
+        if(request.password().equals(account.getPassword())) {
+            accountService.delete(id);
+            return ResponseEntity.ok(new Response(true, "Closed successfully."));
+        }
+        throw new CloseException("Invalid password!");
+    }
+
+    @PutMapping("/update/{id}/password")
+    public ResponseEntity<Response> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
+                                                   @Positive @PathVariable long id) {
+        Account account = accountService.findById(id);
+        if(request.oldPassword().equals(account.getPassword())) {
+            account.setPassword(request.newPassword());
+            accountService.save(account);
+            return ResponseEntity.ok(new Response(true, "Password updated successfully."));
+        }
+        throw new UpdateException("Invalid password!");
     }
 }
