@@ -3,8 +3,6 @@ package com.aklbeti.account.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "profile")
 @NoArgsConstructor
@@ -26,7 +24,10 @@ public class Profile {
     @Column(name = "last_name")
     private String lastName;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "profile_id")
-    private List<Address> addresses;
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
+    private Address address;
 }
