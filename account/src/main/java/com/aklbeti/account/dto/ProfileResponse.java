@@ -7,6 +7,8 @@ public record ProfileResponse(
 
         String lastName,
 
-        List<AddressResponse> addresses
+        String phoneNumber,
+
+        AddressResponse address
 ) {
 }

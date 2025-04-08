@@ -12,8 +12,6 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Iterator;
-
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
@@ -34,26 +32,13 @@ public class AccountController {
     public ResponseEntity<Response> register(
             @Valid @RequestBody RegistrationRequest request) {
 
-        /*
-        // city validation
-        List<String> cities = request.profile().addresses().stream()
-                .map(AddressRequest::city).map(CityRequest::name).toList();
-
-        for(int i = 0; i < cities.size(); i++) {
-            if (!cityService.isCityExist(cities.get(i))) {
-                throw new RegistrationException(
-                        String.format("The city \"%s\" in the %dth address is not valid!", cities.get(i), i + 1));
-            }
-        }
-         */
-
         // map request to account entity
         Account account = mapper.toAccount(request);
 
-        // put the city for addresses from database
-        for(Address address : account.getProfile().getAddresses()) {
-            address.setCity(cityService.findByName(address.getCity().getName()));
-        }
+        // put the city for address from database
+        account.getProfile().getAddress().setCity(
+                cityService.findByName(request.profile().address().city().name())
+        );
 
         accountService.create(account);
         return ResponseEntity.ok(new Response(true, "Registered successfully."));
@@ -61,8 +46,8 @@ public class AccountController {
 
     @GetMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        if(accountService.isAccountExist(request.emailAddress())) {
-            Account account = accountService.findByEmailAddressWithAddressesAndCities(request.emailAddress());
+        if(accountService.doesExist(request.emailAddress())) {
+            Account account = accountService.findByEmailAddress(request.emailAddress());
             if(request.password().equals(account.getPassword())) {
                 return ResponseEntity.ok(new LoginResponse(
                         new Response(true, "Logged in successfully."),
@@ -70,17 +55,16 @@ public class AccountController {
                 ));
             }
         }
-        throw new LoginException("Invalid email or password!");
+        throw new AccountLoginException("Invalid email or password!");
     }
 
-    @DeleteMapping("/close/{id}")
-    public ResponseEntity<Response> close(@Valid @RequestBody CloseRequest request, @Positive @PathVariable long id) {
+    @GetMapping("/get-info/{id}")
+    public ResponseEntity<AccountInfoResponse> getInfo(@Positive @PathVariable long id) {
         Account account = accountService.findById(id);
-        if(request.password().equals(account.getPassword())) {
-            accountService.deleteById(id);
-            return ResponseEntity.ok(new Response(true, "Closed successfully."));
-        }
-        throw new CloseException("Invalid password!");
+        return ResponseEntity.ok(new AccountInfoResponse(
+                new Response(true, "Information was sent successfully."),
+                mapper.toAccountResponse(account)
+        ));
     }
 
     @PutMapping("/update/{id}/password")
@@ -92,87 +76,39 @@ public class AccountController {
             accountService.update(account);
             return ResponseEntity.ok(new Response(true, "Password updated successfully."));
         }
-        throw new UpdateException("Invalid password!");
+        throw new AccountUpdateException("Wrong password!");
     }
 
     @PutMapping("/update/{id}/profile")
-    public ResponseEntity<Response> updateProfile(@Valid @RequestBody UpdateProfileRequest request,
+    public ResponseEntity<Response> updateProfile(@Valid @RequestBody ProfileRequest request,
                                                   @Positive @PathVariable long id) {
+        if(cityService.doesExist(request.address().city().name())) {
+            Account account = accountService.findById(id);
+
+            // update profile
+            account.getProfile().setFirstName(request.firstName());
+            account.getProfile().setLastName(request.lastName());
+            account.getProfile().setPhoneNumber(request.phoneNumber());
+
+            // update address
+            Address address = account.getProfile().getAddress();
+            address.setStreet(request.address().street());
+            address.setBuildNo(request.address().buildNo());
+            address.setCity(cityService.findByName(request.address().city().name()));
+
+            accountService.update(account);
+            return ResponseEntity.ok(new Response(true, "Profile updated successfully."));
+        }
+        throw new AccountUpdateException("Invalid city!");
+    }
+
+    @DeleteMapping("/close/{id}")
+    public ResponseEntity<Response> close(@Valid @RequestBody CloseRequest request, @Positive @PathVariable long id) {
         Account account = accountService.findById(id);
-        account.getProfile().setFirstName(request.firstName());
-        account.getProfile().setLastName(request.lastName());
-        accountService.update(account);
-        return ResponseEntity.ok(new Response(true, "Profile updated successfully."));
-    }
-
-    @PutMapping("/update/{id}/update-address/{addressId}")
-    public ResponseEntity<Response> updateAddress(@Valid @RequestBody AddressRequest request,
-                                                  @Positive @PathVariable long id,
-                                                  @Positive @PathVariable long addressId) {
-        // get address
-        Account account = accountService.findByIdWithAddressesAndCities(id);
-        Address addressToUpdate = null;
-        for(Address address : account.getProfile().getAddresses()) {
-            if(address.getId() == addressId) {
-                addressToUpdate = address;
-                break;
-            }
+        if(request.password().equals(account.getPassword())) {
+            accountService.deleteById(id);
+            return ResponseEntity.ok(new Response(true, "Closed successfully."));
         }
-        if(addressToUpdate == null) {
-            throw new AddressUpdateException("Invalid address id!");
-        }
-
-        // update address
-        addressToUpdate.setStreet(request.street());
-        addressToUpdate.setBuildNo(request.buildNo());
-        addressToUpdate.setCity(cityService.findByName(request.city().name()));
-
-        // update account
-        accountService.update(account);
-
-        return ResponseEntity.ok(new Response(true, "Address updated successfully."));
+        throw new AccountCloseException("Wrong password!");
     }
-
-    @PutMapping("/update/{id}/delete-address/{addressId}")
-    public ResponseEntity<Response> deleteAddress(@Positive @PathVariable long id,
-                                                  @Positive @PathVariable long addressId) {
-        Account account = accountService.findByIdWithAddressesAndCities(id);
-
-        // find and delete the address with the addressId
-        Iterator<Address> iterator = account.getProfile().getAddresses().iterator();
-        while(iterator.hasNext()) {
-            Address address = iterator.next();
-            if(address.getId() == addressId) {
-                if(account.getProfile().getAddresses().size() == 1) {
-                    throw new AddressDeletionException("Account must have at least 1 address!");
-                }
-                iterator.remove();
-                accountService.update(account);
-                return ResponseEntity.ok(new Response(true, "Address deleted successfully."));
-            }
-        }
-
-        throw new AddressDeletionException("Invalid address id!");
-    }
-
-    @PutMapping("/update/{id}/insert-address")
-    public ResponseEntity<Response> insertAddress(@Valid @RequestBody AddressRequest request,
-                                                  @Positive @PathVariable long id) {
-        Account account = accountService.findByIdWithAddressesAndCities(id);
-        account.getProfile().getAddresses().add(
-                new Address(0, request.street(), request.buildNo(), cityService.findByName(request.city().name()))
-        );
-        accountService.update(account);
-        return ResponseEntity.ok(new Response(true, "Address inserted successfully."));
-    }
-
-    @GetMapping("/get-info/{id}")
-    public ResponseEntity<AccountInfoResponse> getInfo(@Positive @PathVariable long id) {
-        Account account = accountService.findByIdWithAddressesAndCities(id);
-        return ResponseEntity.ok(new AccountInfoResponse(
-                new Response(true, "Information was sent successfully."),
-                mapper.toAccountResponse(account)
-        ));
-    }
-
 }

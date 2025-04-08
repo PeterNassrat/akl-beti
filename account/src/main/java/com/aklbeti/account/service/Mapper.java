@@ -18,25 +18,20 @@ public class Mapper {
                 .build();
     }
 
-    private Profile toProfile(ProfileRequest request) {
+    public Profile toProfile(ProfileRequest request) {
         return Profile.builder()
                 .firstName(request.firstName())
                 .lastName(request.lastName())
-                .addresses(request.addresses().stream().map(this::toAddress).toList())
+                .phoneNumber(request.phoneNumber())
+                .address(toAddress(request.address()))
                 .build();
     }
 
-    private Address toAddress(AddressRequest request) {
+    public Address toAddress(AddressRequest request) {
         return Address.builder()
                 .street(request.street())
                 .buildNo(request.buildNo())
-                .city(toCity(request.city()))
-                .build();
-    }
-
-    private City toCity(CityRequest request) {
-        return City.builder()
-                .name(request.name())
+                .city(null)
                 .build();
     }
 
@@ -48,17 +43,17 @@ public class Mapper {
         );
     }
 
-    private ProfileResponse toProfileResponse(Profile profile) {
+    public ProfileResponse toProfileResponse(Profile profile) {
         return new ProfileResponse(
                 profile.getFirstName(),
                 profile.getLastName(),
-                profile.getAddresses().stream().map(this::toAddressResponse).toList()
+                profile.getPhoneNumber(),
+                toAddressResponse(profile.getAddress())
         );
     }
 
-    private AddressResponse toAddressResponse(Address address) {
+    public AddressResponse toAddressResponse(Address address) {
         return new AddressResponse(
-                address.getId(),
                 address.getStreet(),
                 address.getBuildNo(),
                 toCityResponse(address.getCity())

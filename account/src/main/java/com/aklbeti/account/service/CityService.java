@@ -16,12 +16,14 @@ public class CityService {
         this.cityRepository = cityRepository;
     }
 
-    public boolean isCityExist(String name) {
+    public boolean doesExist(String name) {
         return cityRepository.findByName(name).isPresent();
     }
 
     public City findByName(String name) {
-        return cityRepository.findByName(name).orElseThrow(() -> new CityNotFoundException("City does not exist!"));
+        return cityRepository.findByName(name).orElseThrow(
+                () -> new CityNotFoundException("City does not exist!")
+        );
     }
 
     public List<City> findAll() {

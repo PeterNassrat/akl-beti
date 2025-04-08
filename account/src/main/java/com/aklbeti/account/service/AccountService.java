@@ -1,7 +1,6 @@
 package com.aklbeti.account.service;
 
 import com.aklbeti.account.entity.Account;
-import com.aklbeti.account.entity.Address;
 import com.aklbeti.account.exception.AccountNotFoundException;
 import com.aklbeti.account.exception.DuplicateAccountException;
 import com.aklbeti.account.repository.AccountRepository;
@@ -21,27 +20,37 @@ public class AccountService {
 
     @Transactional
     public void create(Account account) {
-        Optional<Account> AccountInDB = accountRepository.findByEmailAddress(account.getEmailAddress());
-        if(AccountInDB.isPresent()) {
+        if(doesExist(account.getEmailAddress())) {
             throw new DuplicateAccountException("Account already exists!");
         }
 
         // ensure that the ids are all zeros
         account.setId(0);
         account.getProfile().setId(0);
-        for(Address address : account.getProfile().getAddresses()) {
-            address.setId(0);
-        }
+        account.getProfile().getAddress().setId(0);
         accountRepository.save(account);
     }
 
-    public Account findByEmailAddressWithAddressesAndCities(String emailAddress) {
-        return accountRepository.findByEmailAddress_(emailAddress)
-                .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
+    @Transactional
+    public void update(Account account) {
+        if(doesExist(account.getId())) {
+            accountRepository.save(account);
+            return;
+        }
+        throw new AccountNotFoundException("Account does not exist!");
     }
 
-    public Account findByIdWithAddressesAndCities(long id) {
-        return accountRepository.findById_(id)
+    @Transactional
+    public void deleteById(long id) {
+        if(doesExist(id)) {
+            accountRepository.deleteById(id);
+            return;
+        }
+        throw new AccountNotFoundException("Account does not exist!");
+    }
+
+    public Account findByEmailAddress(String emailAddress) {
+        return accountRepository.findByEmailAddress(emailAddress)
                 .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
     }
 
@@ -50,45 +59,11 @@ public class AccountService {
                 .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
     }
 
-    public boolean isAccountExist(String emailAddress) {
+    public boolean doesExist(String emailAddress) {
         return accountRepository.findByEmailAddress(emailAddress).isPresent();
     }
 
-    public boolean isAccountExist(long id) {
+    public boolean doesExist(long id) {
         return accountRepository.findById(id).isPresent();
     }
-
-    @Transactional
-    public void deleteById(long id) {
-        if(!isAccountExist(id)) {
-            throw new AccountNotFoundException("Account does not exist!");
-        }
-        accountRepository.deleteById(id);
-    }
-
-    // public Account findByIdWithAddressesAndCities(long id) {
-    //    return accountRepository.findByIdWithAddressesAndCities(id)
-    //            .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
-    // }
-
-    @Transactional
-    public void update(Account account) {
-        accountRepository.save(account);
-    }
-
-    /*
-    @Transactional
-    public Account update(Account updatedAccount) {
-        Account accountInDB = accountRepository.findById(updatedAccount.getId())
-                .orElseThrow(() -> new AccountCreationException("Account does not exist!"));
-
-        // update the content of the accountDB
-        accountInDB.setActive(updatedAccount.isActive());
-        accountInDB.setProfile(updatedAccount.getProfile());
-        accountInDB.setPassword(updatedAccount.getPassword());
-        accountInDB.setEmailAddress(updatedAccount.getEmailAddress());
-
-        return accountRepository.save(accountInDB);
-    }
-     */
 }

@@ -20,13 +20,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     WHERE acc.emailAddress = :emailAddress
     """)
      */
-    @EntityGraph(attributePaths = {"profile", "profile.addresses", "profile.addresses.city"})
-    Optional<Account> findByEmailAddress_(String emailAddress);
-
+    @EntityGraph(attributePaths = {"profile", "profile.address", "profile.address.city"})
     Optional<Account> findByEmailAddress(String emailAddress);
 
-    @EntityGraph(attributePaths = {"profile", "profile.addresses", "profile.addresses.city"})
-    Optional<Account> findById_(long id);
-
+    @EntityGraph(attributePaths = {"profile", "profile.address", "profile.address.city"})
     Optional<Account> findById(long id);
 }

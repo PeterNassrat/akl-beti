@@ -1,9 +1,7 @@
 package com.aklbeti.account.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
@@ -17,8 +15,13 @@ public record ProfileRequest(
         @Size(min = 3, message = "Last name must be at least 3 characters")
         String lastName,
 
+        @NotBlank(message = "Phone number is required!")
+        // @Size(min = 11, max = 11, message = "Phone number must be 11 digits!")
+        @Pattern(regexp = "01[0125][0-9]{8}", message = "Invalid phone number!")
+        String phoneNumber,
+
         @Valid
-        @NotEmpty(message = "At least one address is required")
-        List<@Valid AddressRequest> addresses
+        @NotNull(message = "Address is required!")
+        AddressRequest address
 ) {
 }
