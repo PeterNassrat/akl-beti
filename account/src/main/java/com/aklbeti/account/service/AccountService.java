@@ -20,23 +20,28 @@ public class AccountService {
     }
 
     @Transactional
-    public void create(Account newAccount) {
-        Optional<Account> AccountInDB = accountRepository.findByEmailAddress(newAccount.getEmailAddress());
+    public void create(Account account) {
+        Optional<Account> AccountInDB = accountRepository.findByEmailAddress(account.getEmailAddress());
         if(AccountInDB.isPresent()) {
             throw new DuplicateAccountException("Account already exists!");
         }
 
         // ensure that the ids are all zeros
-        newAccount.setId(0);
-        newAccount.getProfile().setId(0);
-        for(Address address : newAccount.getProfile().getAddresses()) {
+        account.setId(0);
+        account.getProfile().setId(0);
+        for(Address address : account.getProfile().getAddresses()) {
             address.setId(0);
         }
-        accountRepository.save(newAccount);
+        accountRepository.save(account);
     }
 
     public Account findByEmailAddressWithAddressesAndCities(String emailAddress) {
         return accountRepository.findByEmailAddress_(emailAddress)
+                .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
+    }
+
+    public Account findByIdWithAddressesAndCities(long id) {
+        return accountRepository.findById_(id)
                 .orElseThrow(() -> new AccountNotFoundException("Account does not exist!"));
     }
 
@@ -49,8 +54,15 @@ public class AccountService {
         return accountRepository.findByEmailAddress(emailAddress).isPresent();
     }
 
+    public boolean isAccountExist(long id) {
+        return accountRepository.findById(id).isPresent();
+    }
+
     @Transactional
-    public void delete(long id) {
+    public void deleteById(long id) {
+        if(!isAccountExist(id)) {
+            throw new AccountNotFoundException("Account does not exist!");
+        }
         accountRepository.deleteById(id);
     }
 
@@ -60,7 +72,7 @@ public class AccountService {
     // }
 
     @Transactional
-    public void save(Account account) {
+    public void update(Account account) {
         accountRepository.save(account);
     }
 
