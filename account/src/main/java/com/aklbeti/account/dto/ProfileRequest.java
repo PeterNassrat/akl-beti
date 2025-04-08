@@ -3,8 +3,6 @@ package com.aklbeti.account.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-import java.util.List;
-
 public record ProfileRequest(
 
         @NotBlank(message = "First name is required!")
