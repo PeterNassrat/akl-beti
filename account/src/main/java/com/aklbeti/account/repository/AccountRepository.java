@@ -25,8 +25,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByEmailAddress(String emailAddress);
 
-    Optional<Account> findById(long id);
+    @EntityGraph(attributePaths = {"profile", "profile.addresses", "profile.addresses.city"})
+    Optional<Account> findById_(long id);
 
-    // @EntityGraph(attributePaths = {"profile", "profile.addresses", "profile.addresses.city"})
-    // Optional<Account> findByIdWithAddressesAndCities(long id);
+    Optional<Account> findById(long id);
 }
