@@ -58,13 +58,14 @@ public class Mapper {
 
     private AddressResponse toAddressResponse(Address address) {
         return new AddressResponse(
+                address.getId(),
                 address.getStreet(),
                 address.getBuildNo(),
                 toCityResponse(address.getCity())
         );
     }
 
-    private CityResponse toCityResponse(City city) {
+    public CityResponse toCityResponse(City city) {
         return new CityResponse(
                 city.getName()
         );
