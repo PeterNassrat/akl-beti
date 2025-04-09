@@ -16,9 +16,11 @@ public class CityService {
         this.cityRepository = cityRepository;
     }
 
+    /*
     public boolean doesExist(String name) {
         return cityRepository.findByName(name).isPresent();
     }
+     */
 
     public City findByName(String name) {
         return cityRepository.findByName(name).orElseThrow(
