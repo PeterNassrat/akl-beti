@@ -10,10 +10,12 @@ import com.aklbeti.account.service.CityService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
+@Validated
 public class AccountController {
 
     private final AccountService accountService;
@@ -55,7 +57,7 @@ public class AccountController {
                 ));
             }
         }
-        throw new AccountLoginException("Invalid email or password!");
+        throw new BadCredentialsException("Wrong email or password!");
     }
 
     @GetMapping("/get-info/{id}")
@@ -76,30 +78,27 @@ public class AccountController {
             accountService.update(account);
             return ResponseEntity.ok(new Response(true, "Password updated successfully."));
         }
-        throw new AccountUpdateException("Wrong password!");
+        throw new BadCredentialsException("Wrong password!");
     }
 
     @PutMapping("/update/{id}/profile")
     public ResponseEntity<Response> updateProfile(@Valid @RequestBody ProfileRequest request,
                                                   @Positive @PathVariable long id) {
-        if(cityService.doesExist(request.address().city().name())) {
-            Account account = accountService.findById(id);
+        Account account = accountService.findById(id);
 
-            // update profile
-            account.getProfile().setFirstName(request.firstName());
-            account.getProfile().setLastName(request.lastName());
-            account.getProfile().setPhoneNumber(request.phoneNumber());
+        // update profile
+        account.getProfile().setFirstName(request.firstName());
+        account.getProfile().setLastName(request.lastName());
+        account.getProfile().setPhoneNumber(request.phoneNumber());
 
-            // update address
-            Address address = account.getProfile().getAddress();
-            address.setStreet(request.address().street());
-            address.setBuildNo(request.address().buildNo());
-            address.setCity(cityService.findByName(request.address().city().name()));
+        // update address
+        Address address = account.getProfile().getAddress();
+        address.setStreet(request.address().street());
+        address.setBuildNo(request.address().buildNo());
+        address.setCity(cityService.findByName(request.address().city().name()));
 
-            accountService.update(account);
-            return ResponseEntity.ok(new Response(true, "Profile updated successfully."));
-        }
-        throw new AccountUpdateException("Invalid city!");
+        accountService.update(account);
+        return ResponseEntity.ok(new Response(true, "Profile updated successfully."));
     }
 
     @DeleteMapping("/close/{id}")
@@ -109,6 +108,6 @@ public class AccountController {
             accountService.deleteById(id);
             return ResponseEntity.ok(new Response(true, "Closed successfully."));
         }
-        throw new AccountCloseException("Wrong password!");
+        throw new BadCredentialsException("Wrong password!");
     }
 }
