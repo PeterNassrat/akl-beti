@@ -7,9 +7,11 @@ import com.aklbeti.account.exception.*;
 import com.aklbeti.account.service.Mapper;
 import com.aklbeti.account.service.AccountService;
 import com.aklbeti.account.service.CityService;
+import com.aklbeti.account.utility.JwtUtility;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +23,19 @@ public class AccountController {
     private final AccountService accountService;
     private final CityService cityService;
     private final Mapper mapper;
+    private final JwtUtility jwtUtility;
+    private final PasswordEncoder passwordEncoder;
 
     public AccountController(AccountService accountService,
                              CityService cityService,
-                             Mapper mapper) {
+                             Mapper mapper,
+                             JwtUtility jwtUtility,
+                             PasswordEncoder passwordEncoder) {
         this.accountService = accountService;
         this.cityService = cityService;
         this.mapper = mapper;
+        this.jwtUtility = jwtUtility;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -50,9 +58,10 @@ public class AccountController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         if(accountService.doesExist(request.emailAddress())) {
             Account account = accountService.findByEmailAddress(request.emailAddress());
-            if(request.password().equals(account.getPassword())) {
+            if(passwordEncoder.matches(request.password(), account.getPassword())) {
                 return ResponseEntity.ok(new LoginResponse(
                         new Response(true, "Logged in successfully."),
+                        jwtUtility.generateToken(Long.toString(account.getId())),
                         mapper.toAccountResponse(account)
                 ));
             }
@@ -104,7 +113,7 @@ public class AccountController {
     @DeleteMapping("/close/{id}")
     public ResponseEntity<Response> close(@Valid @RequestBody CloseRequest request, @Positive @PathVariable long id) {
         Account account = accountService.findById(id);
-        if(request.password().equals(account.getPassword())) {
+        if(passwordEncoder.matches(request.password(), account.getPassword())) {
             accountService.deleteById(id);
             return ResponseEntity.ok(new Response(true, "Closed successfully."));
         }
