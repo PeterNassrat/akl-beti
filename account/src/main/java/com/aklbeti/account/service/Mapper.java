@@ -5,15 +5,22 @@ import com.aklbeti.account.entity.Account;
 import com.aklbeti.account.entity.Address;
 import com.aklbeti.account.entity.City;
 import com.aklbeti.account.entity.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class Mapper {
 
+    private final PasswordEncoder passwordEncoder;
+
+    public Mapper(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     public Account toAccount(RegistrationRequest request) {
         return Account.builder()
                 .emailAddress(request.emailAddress())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .profile(toProfile(request.profile()))
                 .build();
     }
