@@ -4,7 +4,7 @@ public record LoginResponse(
 
         Response response,
 
-        // String token,
+        String token,
 
         AccountResponse account
 ) {
