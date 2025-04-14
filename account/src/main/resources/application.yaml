@@ -10,3 +10,7 @@ spring:
       ddl-auto: validate
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  config:
+    import: optional:file:.env[.properties]
+jwt:
+  password: ${JWT_SECRET_KEY}
