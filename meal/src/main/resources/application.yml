@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: meal
+  datasource:
+    url: jdbc:postgresql://localhost:5432/meal
+    username: postgres
+    password: 12345678
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
